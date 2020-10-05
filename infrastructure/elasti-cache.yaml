@@ -1,0 +1,64 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: WeDoCode London Production Reference Architecture - Creates ElastiCache cache cluster
+
+Metadata:
+
+  Authors:
+    Description: Darryl Osborne (darrylo@amazon.com)
+  License:
+    Description: 'Copyright 2018 Amazon.com, Inc. and its affiliates. All Rights Reserved.
+                  SPDX-License-Identifier: MIT-0'
+
+Parameters:
+
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+
+  VPC:
+    Type: AWS::EC2::VPC::Id
+    Description: Choose which VPC the Application Load Balancer should be deployed to
+
+  Subnets:
+    Description: Choose which subnets the Application Load Balancer should be deployed to
+    Type: List<AWS::EC2::Subnet::Id>
+
+  SecurityGroup:
+    Description: Select the Security Group to apply to the Application Load Balancer
+    Type: AWS::EC2::SecurityGroup::Id
+
+  ElastiCacheNodeType:
+    Default: cache.t3.micro
+    Description: The Amazon ElastiCache cluster node type.
+    Type: String
+
+  NumberOfCacheNodes:
+    Default: 3
+    Description: The Amazon ElastiCache cluster node count.
+    Type: Number
+
+Resources:
+
+  ElastiCacheCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      AZMode: cross-az
+      CacheNodeType: !Ref ElastiCacheNodeType
+      CacheSubnetGroupName: !Ref ElastiCacheSubnetGroup
+      Engine: memcached
+      NumCacheNodes: !Ref NumberOfCacheNodes
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+      VpcSecurityGroupIds:
+        - !Ref SecurityGroup
+  ElastiCacheSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: ElastiCache Subnet Group
+      SubnetIds: !Ref Subnets
+Outputs:
+  ElastiCacheClusterEndpointAddress:
+    Value: !GetAtt ElastiCacheCluster.ConfigurationEndpoint.Address

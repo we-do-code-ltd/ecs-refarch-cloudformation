@@ -45,6 +45,22 @@ Resources:
         - Key: Name
           Value: !Sub ${EnvironmentName}-LoadBalancers
 
+  # This security group defines who/where is allowed to access the ElastiCache (Memcached) hosts directly.
+  # By default we're just allowing access a bastion host. (TBC)  If you want to SSH directly you need to allow
+  # your IP or (0.0.0.0/0).
+  ElastiCacheSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Access to the ElastiCache hosts for ECS instances/services
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 11211
+          ToPort: 11211
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-ElastiCache-Hosts
+
 Outputs:
   ECSHostSecurityGroup:
     Description: A reference to the security group for ECS hosts
@@ -53,3 +69,7 @@ Outputs:
   LoadBalancerSecurityGroup:
     Description: A reference to the security group for load balancers
     Value: !Ref LoadBalancerSecurityGroup
+
+  ElastiCacheSecurityGroup:
+    Description: A reference to the security group for ElastiCache
+    Value: !Ref ElastiCacheSecurityGroup
